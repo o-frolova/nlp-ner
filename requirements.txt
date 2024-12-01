@@ -1,0 +1,13 @@
+kaggle==1.6.17
+pandas==2.2.3
+torch==2.4.1
+scikit-learn==1.5.2
+spacy==3.7.6
+nltk==3.9.1
+seaborn==0.13.2
+matplotlib==3.9.2
+wordcloud==1.9.3
+gensim==4.3.3
+transformers==4.46.0
+accelerate==1.0.1
+torchmetrics==1.5.1
