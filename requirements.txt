@@ -11,3 +11,4 @@ gensim==4.3.3
 transformers==4.46.0
 accelerate==1.0.1
 torchmetrics==1.5.1
+spacy==3.7.6
