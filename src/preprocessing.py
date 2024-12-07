@@ -10,6 +10,8 @@ import numpy as np
 import seaborn as sns
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from sklearn.metrics import (accuracy_score, f1_score, precision_score,
+                             recall_score)
 from wordcloud import WordCloud
 
 nltk.download('stopwords')
@@ -334,3 +336,30 @@ def remove_special_characters_from_dataset(token_sentences: List[list]) -> List[
         cleaned_dataset.append(cleaned_sentence)
 
     return cleaned_dataset
+
+def evaluate_ner(dataset):
+    """
+    Calculates metrics for NER: accuracy, precision, recall, f1-score.
+
+    :param sample (dict): Dictionary with text, predicted labels, and target labels.
+    :return dict: Metrics (accuracy, precision, recall, f1-score).
+    """
+    accuracy, precision, recall, f1 = [], [], [], []
+    for sample in dataset:
+        predicted = [label for _, label in sample["predicted"]]
+        target = [label for _, label in sample["target"]]
+
+        if len(predicted) != len(target):
+            raise ValueError("Длины predicted и target должны совпадать.")
+
+        accuracy.append(accuracy_score(target, predicted))
+        precision.append(precision_score(target, predicted, average="macro", zero_division=0))
+        recall.append(recall_score(target, predicted, average="macro", zero_division=0))
+        f1.append(f1_score(target, predicted, average="macro", zero_division=0))
+
+    return {
+        "accuracy": np.mean(accuracy),
+        "precision": np.mean(precision),
+        "recall": np.mean(recall),
+        "f1-score": np.mean(f1)
+    }
