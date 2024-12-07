@@ -20,7 +20,7 @@ stop_words = set(stopwords.words('english'))
 
 def set_seed(seed_value: int = 123) -> None:
     np.random.seed(seed_value)
-    random.seed(seed_value) 
+    random.seed(seed_value)
 
 def load_sentences(filepath: pathlib.Path) -> List[list]:
     """
@@ -30,25 +30,25 @@ def load_sentences(filepath: pathlib.Path) -> List[list]:
     """
     sentences = []  # current string
     final = []      # list of strings
-    
+
     with open(filepath, 'r') as f:
         for line in f:
             # If the string is "-", sentence or document separator
             if line.strip() in {'-DOCSTART- -X- -X- O', ''}:
-                if sentences: 
+                if sentences:
                     final.append(sentences)
                     sentences = []
             else:
                 parts = line.strip().split(' ')
                 # Make sure there are at least 4 parts:
                 # token, part of speech, beginning of a named group, beginning of a named entity
-                if len(parts) >= 4:  
+                if len(parts) >= 4:
                     token, tag = parts[0], parts[3]
                     sentences.append((token, tag))
 
     if sentences:
         final.append(sentences)
-    
+
     return final
 
 def analyze_data_quality(token_sentences: List[list]) -> dict:
@@ -56,25 +56,25 @@ def analyze_data_quality(token_sentences: List[list]) -> dict:
     Analyzes data quality for NER by checking:s
     1. Percentage of rows (tokens) with incorrect annotations.
     2. Presence of empty sentences.
-    
+
     :param token_sentences: A list of sentences where each sentence is a list of tuples (token, label)
     :return: A dictionary with the results of the analysis
     """
     total_tokens, invalid_tokens, empty_sentences = 0,0,0
 
     for sentence in token_sentences:
-        if not sentence:  
+        if not sentence:
             empty_sentences += 1
             continue
-        
+
         for token, tag in sentence:
             total_tokens += 1
             if not token or not tag:
                 invalid_tokens += 1
-    
+
     empty_sentence_percentage = (empty_sentences / len(token_sentences)) * 100 if token_sentences else 0
     invalid_token_percentage = (invalid_tokens / total_tokens) * 100 if total_tokens else 0
-    
+
     return {
         "total_tokens": total_tokens,
         "invalid_tokens": invalid_tokens,
@@ -114,14 +114,14 @@ def rare_and_dominant_categories(
     ) -> dict:
     """
     Identifies the top 25% and worst 25% of categories in the dataset based on the percentage distribution.
-    
+
     :param dataset: A list of sentences, where each sentence is a list of tuples (token, label)
     :param top_percentage: The percentage of categories that are considered dominant (top 25%) or rare (worst 25%)
     :return: Dictionary with categories that are considered rare or dominant
     """
     total_tokens = 0
     label_count = defaultdict(int)
-    
+
     for sentence in token_sentences:
         for _, label in sentence:
             total_tokens += 1
@@ -142,7 +142,7 @@ def rare_and_dominant_categories(
         'top_categories': top_categories,
         'worst_categories': worst_categories,
     }
-    
+
     return result
 
 def labels_distribution_charts(
@@ -159,11 +159,11 @@ def labels_distribution_charts(
     :param labels: Labels for all diagrams (list of rows)
     """
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    
+
     datasets = [train_data, test_data, valid_data]
     titles = ['Train dataset', 'Test dataset', 'Validation dataset']
     labels = list(train_data.keys())
-    
+
     for i, ax in enumerate(axes):
         ax.pie(
             list(datasets[i].values()),
@@ -179,18 +179,18 @@ def labels_distribution_charts(
 def entity_neighbors(token_sentences: List[list]) -> dict:
     """
     Identifies which entity categories often follow each other.
-    
+
     :param dataset: A list of sentences where each sentence is a list of tuples (token, label)
     :return: A dictionary with the frequency of entity neighborhoods
     """
     entity_pair_count = defaultdict(int)
 
     for sentence in token_sentences:
-        previous_label = None 
+        previous_label = None
         for token, label in sentence:
-            if label != 'O': 
+            if label != 'O':
                 if previous_label is not None:
-                
+
                     entity_pair_count[(previous_label, label)] += 1
                 previous_label = label
             else:
@@ -218,7 +218,7 @@ def plot_multiple_entity_neighbors(
         ax.set_title(f"Entity Pair Frequencies ({title})")
         ax.set_xlabel("Next Entity")
         ax.set_ylabel("Previous Entity")
-    
+
     plot_heatmap_on_ax(neighbor_train_data, axes[0], "Train")
     plot_heatmap_on_ax(neighbor_test_data, axes[1], "Test")
     plot_heatmap_on_ax(neighbor_valid_data, axes[2], "Valid")
@@ -228,13 +228,13 @@ def plot_multiple_entity_neighbors(
 
 def generate_wordcloud_from_tokens_on_subplots(*datasets):
     fig, axes = plt.subplots(1, len(datasets), figsize=(18, 6))
-    
+
     def generate_wordcloud(dataset, ax, title):
 
         text = " ".join([token for sentence in dataset for token, label in sentence if label != 'O'])
-        
+
         wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
-        
+
         ax.imshow(wordcloud, interpolation='bilinear')
         ax.axis('off')
         ax.set_title(title)
@@ -269,7 +269,7 @@ def remove_duplicates(token_sentences: List[list]) -> List[list]:
 def remove_noise_from_data(token_sentences: List[list]) -> List[list]:
     invalid_token_pattern = r'[^a-zA-Zа-яА-ЯёЁ0-9]'
     cleaned_dataset = []
-    
+
     for sentence in token_sentences:
         cleaned_sentence = []
         for token, label in sentence:
@@ -278,7 +278,7 @@ def remove_noise_from_data(token_sentences: List[list]) -> List[list]:
 
             if label in ['B-PER', 'I-PER', 'B-ORG', 'I-ORG', 'B-LOC', 'I-LOC'] and token.isdigit():
                 continue
-        
+
             cleaned_sentence.append((token, label))
 
         cleaned_dataset.append(cleaned_sentence)
@@ -289,7 +289,7 @@ def remove_noise_from_data(token_sentences: List[list]) -> List[list]:
 def remove_stop_words_from_dataset(token_sentences: List[list]) -> List[list]:
     """
     Removes stop words from tokens in the dataset for the NER task.
-    
+
     :param dataset: List of sentences (each sentence is a list of tuples (token, label))
     :return: New dataset without stopwords
     """
@@ -301,7 +301,7 @@ def remove_stop_words_from_dataset(token_sentences: List[list]) -> List[list]:
         for token, label in sentence:
             if token.lower() not in stop_words:
                 cleaned_sentence.append((token, label))
-    
+
         if cleaned_sentence:
             cleaned_dataset.append(cleaned_sentence)
 
@@ -310,7 +310,7 @@ def remove_stop_words_from_dataset(token_sentences: List[list]) -> List[list]:
 def convert_to_lowercase_for_dataset(token_sentences: List[list]) -> List[list]:
     """
     Casts all tokens in the dataset to lowercase, leaving entity labels unchanged.
-    
+
     :param dataset: List of sentences (each sentence is a list of tuples (token, label))
     :return: New dataset with tokens in lower case
     """
@@ -325,7 +325,7 @@ def convert_to_lowercase_for_dataset(token_sentences: List[list]) -> List[list]:
 def remove_special_characters_from_dataset(token_sentences: List[list]) -> List[list]:
     """
     Removes special characters from tokens in the dataset, leaving entity labels unchanged.
-    
+
     :param dataset: List of sentences (each sentence is a list of tuples (token, label))
     :return: New dataset with tokens without special characters
     """
