@@ -3,3 +3,4 @@ venv
 data
 *.pyc
 results/*
+*/__pycache__
