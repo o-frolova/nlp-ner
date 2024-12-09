@@ -19,8 +19,8 @@ class RuleBasedNER:
 
         # ORG
         org_pattern = [
-            {"IS_TITLE": True}, 
-            {"IS_ALPHA": True}, 
+            {"IS_TITLE": True},
+            {"IS_ALPHA": True},
             {"LOWER": {"in": ["inc", "ltd", "corp", "company"]}, "OP": "?"}
         ]
         self.matcher.add("ORG", [org_pattern])
@@ -34,7 +34,7 @@ class RuleBasedNER:
         matches = self.matcher(doc)
 
         labels = ["O"] * len(doc)
-        
+
         for match_id, start, end in matches:
             label = self.nlp.vocab.strings[match_id]
             for i in range(start, end):
@@ -43,16 +43,16 @@ class RuleBasedNER:
                 else:
                     labels[i] = f"I-{label}"
         return [(token.text, label) for token, label in zip(doc, labels)]
-    
+
     def process_dataset(self, dataset):
         results = []
-        for idx, sample in enumerate(dataset):
+        for _, sample in enumerate(dataset):
             text = sample["text"]
             target = sample["target"]
 
             doc = self.nlp(text)
             if len(doc) != len(target):
-                continue 
+                continue
 
             predicted = self.process_text(text)
             results.append({"text": text, "predicted": predicted, "target": target})
