@@ -1,6 +1,6 @@
 # NLP Named-entity recognition (NER)
 
-Deadline: `December 8 2024`
+Deadline: `December 13 2024`
 
 ## Install dependencies
 Python 3.11
