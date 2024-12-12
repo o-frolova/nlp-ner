@@ -23,3 +23,7 @@ pushd data/
 popd
 ```
 ## Structure of project
+
+1. EDA
+2. RuleBased approach
+3. NN approach
